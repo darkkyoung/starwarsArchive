@@ -2,8 +2,7 @@
 # Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser → 파워쉘에서 실행 권한 설정
 # .\venv\Scripts\Activate.ps1
 # python app.py
-# 위 두 개 실행하면 다시 로컬 브라우저 볼 수 있음
-#http://localhost:5000
+# http://localhost:5000
 
 import os
 
@@ -32,6 +31,10 @@ def get_db_connection():
 
 
 def import_csv_data():
+    print("현재 작업 폴더:", os.getcwd())
+    print("works.csv 실제 경로:", os.path.abspath("data/works.csv"))
+    print("articles.csv 실제 경로:", os.path.abspath("data/articles.csv"))
+
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -68,14 +71,25 @@ def import_csv_data():
 
     for _, row in articles_df.iterrows():
         cur.execute("""
-            INSERT INTO articles (title, source_name, source_url, published_at, summary, category)
-            VALUES (%s, %s, %s, %s, %s, %s);
+            INSERT INTO articles (
+                title,
+                title_ko,
+                source_name,
+                source_url,
+                published_at,
+                summary,
+                summary_ko,
+                category
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """, (
             row["title"],
+            row["title_ko"],
             row["source_name"],
             row["source_url"],
             row["published_at"],
             row["summary"],
+            row["summary_ko"],
             row["category"]
         ))
 
@@ -93,7 +107,7 @@ def index():
     cur = conn.cursor()
 
     query = """
-        SELECT article_id, title, source_name, published_at, summary, category, source_url
+        SELECT article_id, title_ko, source_name, published_at, summary_ko, category, source_url, title, summary
         FROM articles
         WHERE 1=1
     """
@@ -103,12 +117,20 @@ def index():
         query += """
             AND (
                 title ILIKE %s
+                OR title_ko ILIKE %s
                 OR summary ILIKE %s
+                OR summary_ko ILIKE %s
                 OR source_name ILIKE %s
             )
         """
         search_keyword = f"%{keyword}%"
-        params.extend([search_keyword, search_keyword, search_keyword])
+        params.extend([
+            search_keyword,
+            search_keyword,
+            search_keyword,
+            search_keyword,
+            search_keyword
+        ])
 
     if category:
         query += " AND category = %s"
