@@ -1,6 +1,6 @@
-# StarTrack
+# Holocron Archive
 
-StarTrack은 Star Wars 관련 작품 정보와 최신 소식을 제공하는 데이터베이스 기반 큐레이션 웹서비스입니다.  
+Holocron Archive은 Star Wars 관련 작품 정보와 최신 소식을 제공하는 데이터베이스 기반 큐레이션 웹서비스입니다.  
 Star Wars 콘텐츠를 주제로 한 뉴스, 작품 정보, 카테고리 정보를 저장하고, 사용자가 원하는 정보를 검색 및 필터링할 수 있도록 지원합니다.
 
 ## 프로젝트 개요

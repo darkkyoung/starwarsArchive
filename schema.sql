@@ -28,10 +28,12 @@ CREATE TABLE articles (
     title_ko VARCHAR(300),
     source_name VARCHAR(100),
     source_url TEXT,
+    image_url TEXT,
     published_at DATE,
     summary TEXT,
     summary_ko TEXT,
-    category VARCHAR(100)
+    category VARCHAR(100),
+    franchise VARCHAR(100) DEFAULT 'Star Wars'
 );
 
 CREATE TABLE work_articles (

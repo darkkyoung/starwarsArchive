@@ -8,11 +8,13 @@ import os
 
 from flask import Flask, render_template, request
 import psycopg2
+import psycopg2.extras
 import pandas as pd
 
 
 app = Flask(__name__)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
@@ -31,9 +33,12 @@ def get_db_connection():
 
 
 def import_csv_data():
+    works_path = os.path.join(BASE_DIR, "data", "works.csv")
+    articles_path = os.path.join(BASE_DIR, "data", "articles.csv")
+
     print("현재 작업 폴더:", os.getcwd())
-    print("works.csv 실제 경로:", os.path.abspath("data/works.csv"))
-    print("articles.csv 실제 경로:", os.path.abspath("data/articles.csv"))
+    print("works.csv 실제 경로:", works_path)
+    print("articles.csv 실제 경로:", articles_path)
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -51,23 +56,24 @@ def import_csv_data():
     cur.execute("INSERT INTO users (username) VALUES (%s);", ("test_user",))
 
     # works.csv import
-    works_df = pd.read_csv("data/works.csv")
+    works_df = pd.read_csv(works_path)
 
     for _, row in works_df.iterrows():
         cur.execute("""
-            INSERT INTO works (title, type, release_date, status, description, source_url)
-            VALUES (%s, %s, %s, %s, %s, %s);
+            INSERT INTO works (title, type, release_date, status, description, source_url, franchise)
+            VALUES (%s, %s, %s, %s, %s, %s, %s);
         """, (
             row["title"],
             row["type"],
             row["release_date"],
             row["status"],
             row["description"],
-            row["source_url"]
+            row["source_url"],
+            row.get("franchise", "Star Wars")
         ))
 
-    # articles.csv import
-    articles_df = pd.read_csv("data/articles.csv")
+        # articles.csv import
+    articles_df = pd.read_csv(articles_path)
 
     for _, row in articles_df.iterrows():
         cur.execute("""
@@ -76,21 +82,25 @@ def import_csv_data():
                 title_ko,
                 source_name,
                 source_url,
+                image_url,
                 published_at,
                 summary,
                 summary_ko,
-                category
+                category,
+                franchise
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """, (
             row["title"],
             row["title_ko"],
             row["source_name"],
             row["source_url"],
+            row.get("image_url", ""),
             row["published_at"],
             row["summary"],
             row["summary_ko"],
-            row["category"]
+            row["category"],
+            row.get("franchise", "Star Wars")
         ))
 
     conn.commit()
@@ -102,16 +112,35 @@ def import_csv_data():
 def index():
     keyword = request.args.get("keyword", "")
     category = request.args.get("category", "")
+    franchise = request.args.get("franchise", "starwars")
 
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     query = """
-        SELECT article_id, title_ko, source_name, published_at, summary_ko, category, source_url, title, summary
+        SELECT
+            article_id,
+            title,
+            title_ko,
+            source_name,
+            source_url,
+            image_url,
+            published_at,
+            summary,
+            summary_ko,
+            category,
+            franchise
         FROM articles
         WHERE 1=1
     """
     params = []
+
+    if franchise == "marvel":
+        query += " AND franchise = %s"
+        params.append("Marvel")
+    else:
+        query += " AND franchise = %s"
+        params.append("Star Wars")
 
     if keyword:
         query += """
@@ -141,52 +170,50 @@ def index():
     cur.execute(query, params)
     articles = cur.fetchall()
 
-    cur.execute("""
-        SELECT category
-        FROM articles
-        WHERE category IS NOT NULL
-        GROUP BY category
-        ORDER BY CASE category
-            WHEN '영화' THEN 1
-            WHEN '드라마' THEN 2
-            WHEN '애니메이션' THEN 3
-            WHEN '게임' THEN 4
-            WHEN '도서' THEN 5
-            WHEN '기타' THEN 6
-            ELSE 7
-        END;
-    """)
-    categories = cur.fetchall()
-
     cur.close()
     conn.close()
 
     return render_template(
         "index.html",
         articles=articles,
-        categories=categories,
         keyword=keyword,
-        selected_category=category
+        selected_category=category,
+        selected_franchise=franchise
     )
-
 
 @app.route("/works")
 def works():
+    franchise = request.args.get("franchise", "starwars")
+    selected_franchise_name = "Marvel" if franchise == "marvel" else "Star Wars"
+
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT work_id, title, type, release_date, status, description, source_url
+        SELECT
+            work_id,
+            title,
+            type,
+            release_date,
+            status,
+            description,
+            source_url,
+            franchise
         FROM works
+        WHERE franchise = %s
         ORDER BY release_date DESC;
-    """)
+    """, (selected_franchise_name,))
 
     works = cur.fetchall()
 
     cur.close()
     conn.close()
 
-    return render_template("works.html", works=works)
+    return render_template(
+        "works.html",
+        works=works,
+        selected_franchise=franchise
+    )
 
 
 @app.route("/import")
