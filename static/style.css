@@ -487,11 +487,6 @@ select option:checked {
     color: #ffffff;
 }
 
-.sub-nav {
-    margin-top: 14px;
-    padding-top: 2px;
-}
-
 /* 프랜차이즈 챕터형 탭 */
 .franchise-shell {
     position: relative;
