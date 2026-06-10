@@ -10,8 +10,10 @@ Star Wars 관련 작품 정보와 최신 소식 데이터를 PostgreSQL에 저�
 
 사용자는 다음 기능을 이용할 수 있습니다.
 
+- 프랜차이즈 탭 선택
 - 최신 소식 조회
 - 작품 정보 조회
+- 기사 대표 이미지 확인
 - 키워드 검색
 - 카테고리 필터링
 - CSV 기반 데이터 import
@@ -19,25 +21,32 @@ Star Wars 관련 작품 정보와 최신 소식 데이터를 PostgreSQL에 저�
 
 ## 주요 기능
 
-### 1. 최신 소식 조회
+### 1. 프랜차이즈 탭 선택
 
-Star Wars 관련 기사와 소식을 최신순으로 확인할 수 있습니다.
+Star Wars, Marvel 등 여러 프랜차이즈로 확장 가능한 구조를 제공한다.  
+현재 프로토타입은 Star Wars 데이터를 중심으로 구성되어 있으며, `franchise` 속성을 기준으로 데이터를 구분한다.
 
-### 2. 작품 정보 조회
+### 2. 최신 소식 조회
 
-영화, 시리즈, 애니메이션 등 Star Wars 작품 정보를 확인할 수 있습니다.
+Star Wars 관련 기사와 소식을 최신순으로 확인할 수 있다.  
+각 기사에는 제목, 한국어 제목, 출처, 게시일, 카테고리, 요약, 대표 이미지 URL이 포함된다.
 
-### 3. 검색 기능
+### 3. 작품 정보 조회
 
-사용자가 입력한 키워드를 기준으로 기사 제목, 요약, 출처 정보를 검색할 수 있습니다.
+영화, 시리즈, 애니메이션 등 Star Wars 작품 정보를 확인할 수 있다.  
+작품명, 유형, 공개일, 공개 상태, 설명, 출처 URL을 제공한다.
 
-### 4. 카테고리 필터
+### 4. 검색 기능
 
-기사 카테고리는 작품 유형을 기준으로 영화, 드라마, 애니메이션, 게임, 도서, 기타로 분류하였다.
+사용자가 입력한 키워드를 기준으로 기사 제목, 한국어 제목, 요약, 한국어 요약, 출처 정보를 검색할 수 있다.
 
-### 5. CSV 데이터 import
+### 5. 카테고리 필터
 
-`data/works.csv`, `data/articles.csv` 파일에 저장된 데이터를 PostgreSQL 데이터베이스로 import할 수 있습니다.
+기사 카테고리는 영화, 드라마, 애니메이션, 게임, 도서, 기타로 분류하였다.
+
+### 6. CSV 데이터 import
+
+`data/works.csv`, `data/articles.csv` 파일에 저장된 데이터를 PostgreSQL 데이터베이스로 import할 수 있다.
 
 ## 프로젝트 구조
 
@@ -45,7 +54,9 @@ Star Wars 관련 기사와 소식을 최신순으로 확인할 수 있습니다.
 starwarsArchive/
 ├─ app.py
 ├─ schema.sql
+├─ sql_data.sql
 ├─ requirements.txt
+├─ README.md
 ├─ data/
 │  ├─ articles.csv
 │  └─ works.csv
@@ -53,7 +64,5 @@ starwarsArchive/
 │  └─ style.css
 ├─ templates/
 │  ├─ index.html
-│  ├─ works.html
-│  ├─ article_detail.html
-│  └─ bookmarks.html
-└─ README.md
+│  └─ works.html
+└─ fetch_article_images.py

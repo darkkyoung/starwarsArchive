@@ -31,21 +31,21 @@ def get_db_connection():
         )
     return conn
 
+def get_value(row, column, default=None):
+    value = row[column] if column in row.index else default
+
+    if pd.isna(value):
+        return default
+
+    return value
+
 
 def import_csv_data():
     works_path = os.path.join(BASE_DIR, "data", "works.csv")
     articles_path = os.path.join(BASE_DIR, "data", "articles.csv")
 
-    print("현재 작업 폴더:", os.getcwd())
-    print("works.csv 실제 경로:", works_path)
-    print("articles.csv 실제 경로:", articles_path)
-
     works_df = pd.read_csv(works_path)
     articles_df = pd.read_csv(articles_path)
-
-    print("articles.csv 컬럼:", articles_df.columns.tolist())
-    print("articles.csv 첫 행 published_at:", articles_df.loc[0, "published_at"])
-    print("articles.csv 첫 행 summary:", articles_df.loc[0, "summary"])
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -77,13 +77,13 @@ def import_csv_data():
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s);
             """, (
-                row["title"],
-                row["type"],
-                row["release_date"],
-                row["status"],
-                row["description"],
-                row["source_url"],
-                row.get("franchise", "Star Wars")
+                get_value(row, "title"),
+                get_value(row, "type"),
+                get_value(row, "release_date"),
+                get_value(row, "status"),
+                get_value(row, "description"),
+                get_value(row, "source_url"),
+                get_value(row, "franchise", "Star Wars")
             ))
 
         # articles.csv import
@@ -103,16 +103,16 @@ def import_csv_data():
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
             """, (
-                row["title"],
-                row["title_ko"],
-                row["source_name"],
-                row["source_url"],
-                row.get("image_url", ""),
-                row["published_at"],
-                row["summary"],
-                row["summary_ko"],
-                row["category"],
-                row.get("franchise", "Star Wars")
+                get_value(row, "title"),
+                get_value(row, "title_ko"),
+                get_value(row, "source_name"),
+                get_value(row, "source_url"),
+                get_value(row, "image_url", ""),
+                get_value(row, "published_at"),
+                get_value(row, "summary"),
+                get_value(row, "summary_ko"),
+                get_value(row, "category"),
+                get_value(row, "franchise", "Star Wars")
             ))
 
         conn.commit()
@@ -228,9 +228,41 @@ def works():
     cur.close()
     conn.close()
 
+    # 1. 가장 가까운 개봉 예정작
+    upcoming_work = None
+    for work in works:
+        if work["status"] == "Upcoming":
+            if upcoming_work is None or work["release_date"] < upcoming_work["release_date"]:
+                upcoming_work = work
+
+    # 2. 대표 작품: 우선 The Mandalorian and Grogu를 대표작으로 지정
+    featured_work = None
+    for work in works:
+        if work["title"] == "Star Wars: The Mandalorian and Grogu":
+            featured_work = work
+            break
+
+    # 3. 대표작이 없으면 최신 공개 완료 작품을 대표작으로 사용
+    if featured_work is None:
+        for work in works:
+            if work["status"] == "Released":
+                featured_work = work
+                break
+
+    # 4. 나머지 작품 목록
+    other_works = []
+    for work in works:
+        if upcoming_work and work["work_id"] == upcoming_work["work_id"]:
+            continue
+        if featured_work and work["work_id"] == featured_work["work_id"]:
+            continue
+        other_works.append(work)
+
     return render_template(
         "works.html",
-        works=works,
+        upcoming_work=upcoming_work,
+        featured_work=featured_work,
+        other_works=other_works,
         selected_franchise=franchise
     )
 

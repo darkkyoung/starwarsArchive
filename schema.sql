@@ -68,3 +68,11 @@ CREATE TABLE notes (
     note_text TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE OR REPLACE VIEW article_category_stats AS
+SELECT
+    franchise,
+    category,
+    COUNT(*) AS article_count
+FROM articles
+GROUP BY franchise, category;

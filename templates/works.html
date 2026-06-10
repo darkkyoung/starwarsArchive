@@ -49,32 +49,77 @@
 
                     <h2 class="section-title">작품 정보</h2>
 
-                    {% if works and works|length > 0 %}
-                        <section class="works-grid">
-                            {% for work in works %}
-                                <article class="work-card card">
-                                    <div class="work-top">
-                                        <div>
-                                            <span class="work-type">{{ work.type }}</span>
-                                            <h3>{{ work.title }}</h3>
-                                            <div class="meta">개봉/공개일: {{ work.release_date }}</div>
+                    {% if upcoming_work or featured_work or other_works %}
 
-                                            {% if work.status == 'Released' %}
-                                                <span class="status released">공개 완료</span>
-                                            {% else %}
-                                                <span class="status upcoming">공개 예정</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+                        {% if upcoming_work %}
+                            <section class="upcoming-strip">
+                                <div class="upcoming-left">
+                                    <span class="upcoming-label">개봉 예정</span>
+                                    <strong>{{ upcoming_work.title }}</strong>
+                                </div>
 
-                                    <p class="work-desc">{{ work.description }}</p>
+                                <div class="upcoming-right">
+                                    <span>{{ upcoming_work.release_date }}</span>
 
-                                    {% if work.source_url %}
-                                        <a class="button-link" href="{{ work.source_url }}" target="_blank">출처 보기</a>
+                                    {% if upcoming_work.source_url %}
+                                        <a href="{{ upcoming_work.source_url }}" target="_blank">출처 보기</a>
                                     {% endif %}
-                                </article>
-                            {% endfor %}
-                        </section>
+                                </div>
+                            </section>
+                        {% endif %}
+
+                        {% if featured_work %}
+                            <section class="featured-work card">
+                                <div class="featured-work-content">
+                                    <span class="work-type">{{ featured_work.type }}</span>
+
+                                    <h3>{{ featured_work.title }}</h3>
+
+                                    <div class="meta">개봉/공개일: {{ featured_work.release_date }}</div>
+
+                                    {% if featured_work.status == 'Released' %}
+                                        <span class="status released">공개 완료</span>
+                                    {% else %}
+                                        <span class="status upcoming">공개 예정</span>
+                                    {% endif %}
+
+                                    <p class="work-desc">{{ featured_work.description }}</p>
+
+                                    {% if featured_work.source_url %}
+                                        <a class="button-link" href="{{ featured_work.source_url }}" target="_blank">출처 보기</a>
+                                    {% endif %}
+                                </div>
+                            </section>
+                        {% endif %}
+
+                        {% if other_works and other_works|length > 0 %}
+                            <section class="works-grid">
+                                {% for work in other_works %}
+                                    <article class="work-card card">
+                                        <div class="work-top">
+                                            <div>
+                                                <span class="work-type">{{ work.type }}</span>
+                                                <h3>{{ work.title }}</h3>
+                                                <div class="meta">개봉/공개일: {{ work.release_date }}</div>
+
+                                                {% if work.status == 'Released' %}
+                                                    <span class="status released">공개 완료</span>
+                                                {% else %}
+                                                    <span class="status upcoming">공개 예정</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <p class="work-desc">{{ work.description }}</p>
+
+                                        {% if work.source_url %}
+                                            <a class="button-link" href="{{ work.source_url }}" target="_blank">출처 보기</a>
+                                        {% endif %}
+                                    </article>
+                                {% endfor %}
+                            </section>
+                        {% endif %}
+
                     {% else %}
                         <p class="empty-text">
                             {% if selected_franchise == 'marvel' %}
