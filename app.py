@@ -73,9 +73,10 @@ def import_csv_data():
                     status,
                     description,
                     source_url,
+                    image_url,
                     franchise
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s);
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
             """, (
                 get_value(row, "title"),
                 get_value(row, "type"),
@@ -83,6 +84,7 @@ def import_csv_data():
                 get_value(row, "status"),
                 get_value(row, "description"),
                 get_value(row, "source_url"),
+                get_value(row, "image_url", ""),
                 get_value(row, "franchise", "Star Wars")
             ))
 
@@ -217,13 +219,39 @@ def works():
             status,
             description,
             source_url,
+            image_url,
             franchise
         FROM works
         WHERE franchise = %s
         ORDER BY release_date DESC;
     """, (selected_franchise_name,))
 
-    works = cur.fetchall()
+    works = [dict(work) for work in cur.fetchall()]
+
+    for work in works:
+        news_keyword = work["title"]
+
+        # 기사 검색이 잘 되도록 작품명에서 불필요한 접두어 제거
+        news_keyword = news_keyword.replace("Star Wars: ", "")
+
+        # 부제까지 너무 길면 검색 결과가 줄어들 수 있으므로 핵심 제목만 사용
+        if " - " in news_keyword:
+            news_keyword = news_keyword.split(" - ")[0]
+
+        work["news_keyword"] = news_keyword
+
+        # 극장 상영작 여부
+        # 현재 프로토타입에서는 The Mandalorian and Grogu를 극장 예매 대상 작품으로 처리
+        work["is_theater_release"] = (
+            work["title"] == "Star Wars: The Mandalorian and Grogu"
+        )
+
+        # 극장 예매 사이트 URL
+        work["theater_urls"] = {
+            "CGV": "https://cgv.co.kr/cnm/movieBook/movie",
+            "롯데시네마": "https://www.lottecinema.co.kr/NLCHS/Ticketing/Schedule",
+            "메가박스": "https://www.megabox.co.kr/booking"
+        }
 
     cur.close()
     conn.close()

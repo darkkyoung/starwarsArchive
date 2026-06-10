@@ -77,6 +77,7 @@ SELECT
     status,
     description,
     source_url,
+    image_url,
     franchise
 FROM works
 WHERE franchise = 'Star Wars'
@@ -92,6 +93,7 @@ SELECT
     status,
     description,
     source_url,
+    image_url,
     franchise
 FROM works
 WHERE franchise = 'Star Wars'
@@ -210,3 +212,42 @@ UNION ALL
 SELECT 'bookmarks', COUNT(*) FROM bookmarks
 UNION ALL
 SELECT 'notes', COUNT(*) FROM notes;
+
+-- 16. 작품명 기반 관련 소식 검색
+-- 작품 정보 페이지의 '관련 소식' 버튼과 연결되는 검색 기능
+SELECT
+    article_id,
+    title,
+    title_ko,
+    source_name,
+    published_at,
+    summary_ko,
+    category,
+    source_url,
+    image_url
+FROM articles
+WHERE franchise = 'Star Wars'
+  AND (
+        title ILIKE '%Mandalorian%'
+        OR title_ko ILIKE '%Mandalorian%'
+        OR summary ILIKE '%Mandalorian%'
+        OR summary_ko ILIKE '%Mandalorian%'
+  )
+ORDER BY published_at DESC;
+
+
+-- 17. 현재 상영/대표 작품 조회
+-- 프로토타입에서는 The Mandalorian and Grogu를 극장 예매 대상 대표 작품으로 사용
+SELECT
+    work_id,
+    title,
+    type,
+    release_date,
+    status,
+    description,
+    source_url,
+    image_url,
+    franchise
+FROM works
+WHERE franchise = 'Star Wars'
+  AND title = 'Star Wars: The Mandalorian and Grogu';

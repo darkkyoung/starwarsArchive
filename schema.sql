@@ -1,3 +1,5 @@
+DROP VIEW IF EXISTS article_category_stats;
+
 DROP TABLE IF EXISTS article_tags;
 DROP TABLE IF EXISTS bookmarks;
 DROP TABLE IF EXISTS notes;
@@ -20,6 +22,7 @@ CREATE TABLE works (
     status VARCHAR(50),
     description TEXT,
     source_url TEXT,
+    image_url TEXT,
     franchise VARCHAR(100) DEFAULT 'Star Wars'
 );
 
