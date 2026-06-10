@@ -40,72 +40,91 @@ def import_csv_data():
     print("works.csv 실제 경로:", works_path)
     print("articles.csv 실제 경로:", articles_path)
 
+    works_df = pd.read_csv(works_path)
+    articles_df = pd.read_csv(articles_path)
+
+    print("articles.csv 컬럼:", articles_df.columns.tolist())
+    print("articles.csv 첫 행 published_at:", articles_df.loc[0, "published_at"])
+    print("articles.csv 첫 행 summary:", articles_df.loc[0, "summary"])
+
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # 기존 데이터 삭제
-    cur.execute("DELETE FROM bookmarks;")
-    cur.execute("DELETE FROM notes;")
-    cur.execute("DELETE FROM article_tags;")
-    cur.execute("DELETE FROM work_articles;")
-    cur.execute("DELETE FROM articles;")
-    cur.execute("DELETE FROM works;")
-    cur.execute("DELETE FROM users;")
+    try:
+        # 기존 데이터 삭제
+        cur.execute("DELETE FROM bookmarks;")
+        cur.execute("DELETE FROM notes;")
+        cur.execute("DELETE FROM article_tags;")
+        cur.execute("DELETE FROM work_articles;")
+        cur.execute("DELETE FROM articles;")
+        cur.execute("DELETE FROM works;")
+        cur.execute("DELETE FROM users;")
 
-    # 기본 사용자 추가
-    cur.execute("INSERT INTO users (username) VALUES (%s);", ("test_user",))
+        # 기본 사용자 추가
+        cur.execute("INSERT INTO users (username) VALUES (%s);", ("test_user",))
 
-    # works.csv import
-    works_df = pd.read_csv(works_path)
-
-    for _, row in works_df.iterrows():
-        cur.execute("""
-            INSERT INTO works (title, type, release_date, status, description, source_url, franchise)
-            VALUES (%s, %s, %s, %s, %s, %s, %s);
-        """, (
-            row["title"],
-            row["type"],
-            row["release_date"],
-            row["status"],
-            row["description"],
-            row["source_url"],
-            row.get("franchise", "Star Wars")
-        ))
+        # works.csv import
+        for _, row in works_df.iterrows():
+            cur.execute("""
+                INSERT INTO works (
+                    title,
+                    type,
+                    release_date,
+                    status,
+                    description,
+                    source_url,
+                    franchise
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s);
+            """, (
+                row["title"],
+                row["type"],
+                row["release_date"],
+                row["status"],
+                row["description"],
+                row["source_url"],
+                row.get("franchise", "Star Wars")
+            ))
 
         # articles.csv import
-    articles_df = pd.read_csv(articles_path)
+        for _, row in articles_df.iterrows():
+            cur.execute("""
+                INSERT INTO articles (
+                    title,
+                    title_ko,
+                    source_name,
+                    source_url,
+                    image_url,
+                    published_at,
+                    summary,
+                    summary_ko,
+                    category,
+                    franchise
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+            """, (
+                row["title"],
+                row["title_ko"],
+                row["source_name"],
+                row["source_url"],
+                row.get("image_url", ""),
+                row["published_at"],
+                row["summary"],
+                row["summary_ko"],
+                row["category"],
+                row.get("franchise", "Star Wars")
+            ))
 
-    for _, row in articles_df.iterrows():
-        cur.execute("""
-            INSERT INTO articles (
-                title,
-                title_ko,
-                source_name,
-                source_url,
-                image_url,
-                published_at,
-                summary,
-                summary_ko,
-                category,
-                franchise
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-        """, (
-            row["title"],
-            row["title_ko"],
-            row["source_name"],
-            row["source_url"],
-            row.get("image_url", ""),
-            row["published_at"],
-            row["summary"],
-            row["summary_ko"],
-            row["category"],
-            row.get("franchise", "Star Wars")
-        ))
+        conn.commit()
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    except Exception as e:
+        conn.rollback()
+        print("IMPORT 실패:", e)
+        raise
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route("/")

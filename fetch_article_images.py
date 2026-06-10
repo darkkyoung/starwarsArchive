@@ -48,6 +48,9 @@ def main():
     if "image_url" not in df.columns:
         df.insert(4, "image_url", "")
 
+    # image_url 컬럼을 문자열 타입으로 고정
+    df["image_url"] = df["image_url"].fillna("").astype(str)
+
     for idx, row in df.iterrows():
         current_image = str(row.get("image_url", "")).strip()
 

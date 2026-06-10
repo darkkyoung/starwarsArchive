@@ -19,7 +19,8 @@ CREATE TABLE works (
     release_date DATE,
     status VARCHAR(50),
     description TEXT,
-    source_url TEXT
+    source_url TEXT,
+    franchise VARCHAR(100) DEFAULT 'Star Wars'
 );
 
 CREATE TABLE articles (
